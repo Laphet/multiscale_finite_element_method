@@ -32,7 +32,7 @@ gslOuterIntergrand (double x, void * p)
 
 
 double
-getNumericalIntegration (const double (*integrandFuncP) (double, double), const double xmin, const double xmax,
+getNumericalIntegration (double (*integrandFuncP) (double, double), const double xmin, const double xmax,
                             const double ymin, const double ymax)
 {
     g_integrandFuncP = integrandFuncP;
