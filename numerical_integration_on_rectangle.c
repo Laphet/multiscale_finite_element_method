@@ -54,7 +54,7 @@ getNumericalIntegration (double (*integrandFuncP) (double, double), const double
 double
 integrand (double x, double y)
 {
-    return 1.0
+    return 1.0;
 }
 
 
