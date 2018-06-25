@@ -16,7 +16,7 @@ gslOuterIntergrand (double x, void * p)
     F.function = &gslInnerIntegrand;
     F.params = &x;
     double result = 0.0, error = 0.0;
-    gsl_integration_qag (&F, g_rectangle.ymin, grectangle.ymax, EPSABS, EPSREL, LIMIT, 1, g_workspace, &result, &error);
+    gsl_integration_qag (&F, g_rectangle.ymin, g_rectangle.ymax, EPSABS, EPSREL, LIMIT, 1, g_workspace, &result, &error);
     return result;
 }
 
