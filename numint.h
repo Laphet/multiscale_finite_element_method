@@ -7,7 +7,7 @@ struct rectangle
     double xmax;
     double ymin;
     double ymax;
-};
+}rectangle;
 
 typedef double (*funcP) (double, double);
 
