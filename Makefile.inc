@@ -5,7 +5,7 @@ BUILD_CPPFLAGS	= -DMPI_NO_CPPBIND   -DVTK_DIR="\"\""  -DGZIP_PROG="\"/usr/bin/gz
 CC		= /share/soft/mvapich2-2.3b_gcc/bin/mpicc 
 CFLAGS		= -g -O2 -Wall -Wmissing-field-initializers -fopenmp
 BUILD_CFLAGS	= -fPIC
-USER_CFLAGS	=
+USER_CFLAGS	= -I/home/yechangqing/gsl/include
 
 CXX		= /share/soft/mvapich2-2.3b_gcc/bin/mpicxx 
 CXXFLAGS	= -g -O2 -Wno-deprecated -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX -fopenmp
@@ -25,7 +25,7 @@ LDFLAGS		= -L/home/yechangqing/phg-0.9.3/src  -fopenmp
 USER_LDFLAGS	=
 
 LIBS		= -Wl,-rpath,/home/yechangqing/phg-0.9.3/src -lphg  -lmpfr  -lgmp  -lm  -L/soft/mvapich2-2.3b-gcc/lib -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/ipp/lib/intel64 -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/compiler/lib/intel64_lin -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/tbb/lib/intel64/gcc4.7 -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/daal/lib/intel64_lin -L/share/soft/intel_2018_update1/compilers_and_libraries_2018.1.163/linux/daal/../tbb/lib/intel64_lin/gcc4.4 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../.. -lgfortran -lm -lmpifort -lmpi -lquadmath  -lgfortran -lm -lmpifort -lmpi -lquadmath -Wl,-rpath,/usr/local/lib -Wl,-rpath,/usr/local/lib64
-USER_LIBS	=
+USER_LIBS	= -L/home/yechangqing/gsl/lib -lgsl -lgslcblas
 
 AR		= /usr/bin/ar 
 RANLIB		= /usr/bin/ranlib 
@@ -33,10 +33,10 @@ BUILD_SHARED	= gcc -shared
 BUILD_SHARED_LIBS = 
 LIB_SUFFIX	= .so
 
-.c.o:
+.o.c:
 	${CC} ${CFLAGS} ${CPPFLAGS} ${USER_CFLAGS} -c $*.c
 
-.cxx.o:
+.cxx.c:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${USER_CXXFLAGS} -c $*.cxx
 
 .f.o:
