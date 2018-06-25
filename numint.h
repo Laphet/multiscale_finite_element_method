@@ -1,3 +1,6 @@
+#ifndef NUMINT_H
+#define NUMINT_H
+
 #include "gsl/gsl_integration.h"
 
 typedef 
@@ -23,5 +26,5 @@ rectangle g_rectangle = {.xmin = 0.0, .xmax = 1.0, .ymin = 0.0, .ymax = 1.0};
 
 double getNumericalIntegration (funcP f, rectangle rectangleDom);
 
-
+#endif
 
