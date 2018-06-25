@@ -1,6 +1,5 @@
-CPPFLAGS = -Wall
-CFLAGS = -I/home/yechangqing/gsl/include
 LDFLAGS	= -L/home/yechangqing/gsl/lib -lm -lgsl -lgslcblas
+CFLAGS = -Wall -I/home/yechangqing/gsl/include
 
 test : test.o numint.o
 
