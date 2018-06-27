@@ -3,18 +3,16 @@
 
 #include "gsl/gsl_integration.h"
 
-typedef 
-struct rectangle
+typedef struct rectangle
 {
     double xmin;
     double xmax;
     double ymin;
     double ymax;
-}rectangle;
+} rectangle;
 
-typedef double (*funcP) (double, double);
+typedef double (*func)(double, double);
 
-double getNumericalIntegration (funcP f, rectangle rectangleDom);
+double getNumericalIntegration(func f, rectangle rectangleDom);
 
 #endif
-
