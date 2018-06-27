@@ -1,50 +1,52 @@
 #include "sfem.h"
 
 int g_sliceNum = 2;
-coefficient g_A = NULL;
+coefficient g_A; 
 double ***g_inteValueOnElement = NULL;
 func g_f = NULL, g_f1 = NULL, g_f2 = NULL, g_bdry = NULL;
 gsl_matrix *g_nodeValue = NULL;
-gsl_matrix *g_stiffnessMatrix = NULL;
-gsl_matrix *g_innerNodeValue = NULL;
+gsl_spmatrix *g_stiffnessMatrix = NULL;
+gsl_vector *g_innerNodeValue = NULL;
 gsl_vector *g_loadVector = NULL;
 int g_m = 0, g_n = 0, g_flag = 0;
 rectangle refRec = {.xmin = -1.0, .xmax = 1.0, .ymin = -1.0, .ymax = 1.0};
 const int NUM_OF_INTE = 10;
+
+double zero(double x, double y) {return 0.0;}
 
 int getIndexInVector(const int m, const int n)
 {
     return (m - 1) * (g_sliceNum - 1) + n - 1;
 }
 
-double integrand(const double x, const double y)
+double integrand(double x, double y)
 {
-    double h = 1.0 / g_sliceNum;
+    double h = 1.0 / (double)g_sliceNum;
     double x_ = ((x + 1.0) / 2.0 + (double)g_m) * h;
     double y_ = ((y + 1.0) / 2.0 + (double)g_n) * h;
     double result = 0.0;
     switch (g_flag)
     {
     case 0:
-        result = (y * y - 1.0) * g_A.a1(x_, y_) + (2 * x * y - 2.0) * g_A.a3(x_, y_) + (x * x - 1.0) * g_A.a2(x_, y_);
+        result = (y * y - 1.0) * g_A.a1(x_, y_) + (2 * x * y - 2.0) * g_A.a3(x_, y_) + (x * x - 1.0) * g_A.a2(x_, y_); break;
     case 1:
-        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + 2 * (y - 1.0) * (x - 1.0) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_);
+        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + 2 * (y - 1.0) * (x - 1.0) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_); break;
     case 2:
-        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + 2 * (y - 1.0) * (x + 1.0) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_);
+        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + 2 * (y - 1.0) * (x + 1.0) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_); break;
     case 3:
-        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + 2 * (y + 1.0) * (x + 1.0) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_);
+        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + 2 * (y + 1.0) * (x + 1.0) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_); break;
     case 4:
-        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + 2 * (y + 1.0) * (x - 1.0) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_);
+        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + 2 * (y + 1.0) * (x - 1.0) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_); break;
     case 5:
-        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + ((x - 1.0) * (y - 1.0) + (y - 1.0) * (x + 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x + 1.0) * g_A.a2(x_, y_);
+        result = (y - 1.0) * (y - 1.0) * g_A.a1(x_, y_) + ((x - 1.0) * (y - 1.0) + (y - 1.0) * (x + 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x + 1.0) * g_A.a2(x_, y_); break;
     case 6:
-        result = (y - 1.0) * (y + 1.0) * g_A.a1(x_, y_) + ((x + 1.0) * (y + 1.0) + (y - 1.0) * (x + 1.0)) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_);
+        result = (y - 1.0) * (y + 1.0) * g_A.a1(x_, y_) + ((x + 1.0) * (y + 1.0) + (y - 1.0) * (x + 1.0)) * g_A.a3(x_, y_) + (x + 1.0) * (x + 1.0) * g_A.a2(x_, y_); break;
     case 7:
-        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + ((x + 1.0) * (y + 1.0) + (y + 1.0) * (x - 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_);
+        result = (y + 1.0) * (y + 1.0) * g_A.a1(x_, y_) + ((x + 1.0) * (y + 1.0) + (y + 1.0) * (x - 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_); break;
     case 8:
-        result = (y + 1.0) * (y - 1.0) * g_A.a1(x_, y_) + ((x - 1.0) * (y - 1.0) + (y + 1.0) * (x - 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_);
+        result = (y + 1.0) * (y - 1.0) * g_A.a1(x_, y_) + ((x - 1.0) * (y - 1.0) + (y + 1.0) * (x - 1.0)) * g_A.a3(x_, y_) + (x - 1.0) * (x - 1.0) * g_A.a2(x_, y_); break;
     case 9:
-        result = (y * y - 1.0) * g_A.a1(x_, y_) + (2 * x * y + 2.0) * g_A.a3(x_, y_) + (x * x - 1.0) * g_A.a2(x_, y_);
+        result = (y * y - 1.0) * g_A.a1(x_, y_) + (2 * x * y + 2.0) * g_A.a3(x_, y_) + (x * x - 1.0) * g_A.a2(x_, y_); break;
     default:
         result = 0.0;
     }
@@ -61,16 +63,17 @@ func getIntegrand(int m, int n, int flag)
 
 void sfemInit(int sliceNum)
 {
+    int i = 0, j = 0;
     g_sliceNum = sliceNum;
-    ***g_inteValueOnElement = (double ***)malloc(sizeof(**double) * g_sliceNum);
-    for (int i = 0; i < g_sliceNum; i++)
+    g_inteValueOnElement = (double ***) malloc(sizeof(double **) * g_sliceNum);
+    for (i = 0; i < g_sliceNum; i++)
     {
-        g_inteValueOnElement[i] = (double **)malloc(sizeof(*double) * g_sliceNum);
-        for (int j = 0; j < g_sliceNum; j++)
-            g_inteValueOnElement[i][j] = (double *)malloc(sizeof(double) * NUM_OF_INTE);
+        g_inteValueOnElement[i] = (double **) malloc(sizeof(double *) * g_sliceNum);
+        for (j = 0; j < g_sliceNum; j++)
+            g_inteValueOnElement[i][j] = (double *) malloc(sizeof(double) * NUM_OF_INTE);
     }
     g_nodeValue = gsl_matrix_calloc(g_sliceNum + 1, g_sliceNum + 1);
-    g_stiffnessMatrix = gsl_spmatrix_alloc ((g_sliceNum-1) * (g_sliceNum-1), (g_sliceNum-1) * (g_sliceNum-1);
+    g_stiffnessMatrix = gsl_spmatrix_alloc ((g_sliceNum-1) * (g_sliceNum-1), (g_sliceNum-1) * (g_sliceNum-1));
     g_innerNodeValue = gsl_vector_calloc ((g_sliceNum-1) * (g_sliceNum-1));
     g_loadVector = gsl_vector_calloc ((g_sliceNum-1) * (g_sliceNum-1));
 }
@@ -78,18 +81,24 @@ void sfemInit(int sliceNum)
 void setCoefficient(coefficient A)
 {
     g_A = A;
-    for (int m = 0; m < g_sliceNum; m++)
-        for (int n = 0; n < g_sliceNum; n++)
-            for (int flag = 0; flag < NUM_OF_INTE; flag++)
-                g_inteValueOnElement[m][n][flag] = getNumericalIntegration(getIntegrand(m, n, flag), refRec);
+    int m = 0, n = 0, flag = 0;
+    for (m = 0; m < g_sliceNum; m++)
+        for (n = 0; n < g_sliceNum; n++)
+            for (flag = 0; flag < NUM_OF_INTE; flag++)
+                {
+               double temp = getNumericalIntegration(getIntegrand(m,n,flag), refRec);
+               printf("m=%d n=%d flag=%d value=%f \n", m, n, flag, temp); 
+                g_inteValueOnElement[m][n][flag] = temp;
+}
 
     /* test */
-    for (int m = 0; m < g_sliceNum; m++)
-        for (int n = 0; n < g_sliceNum; n++)
+    for (m = 0; m < g_sliceNum; m++)
+        for (n = 0; n < g_sliceNum; n++)
         {
-            printf('\n m=%d n=%d :', m, n);
-            for (int flag = 0; flag < NUM_OF_INTE; flag++)
-                printf('%f\t', g_inteValueOnElement[m][n][flag]);
+            printf("m=%d n=%d :", m, n);
+            for (flag = 0; flag < NUM_OF_INTE; flag++)
+                printf("%f\t", g_inteValueOnElement[m][n][flag]);
+            printf("\n");
         }
 }
 
@@ -131,13 +140,14 @@ void solveEPDEwithDivF(func f1, func f2, func bdry)
 
 void sfemFinal(void)
 {
-    gsl_block_free(g_nodeValue);
+    gsl_matrix_free(g_nodeValue);
     gsl_spmatrix_free(g_stiffnessMatrix);
     gsl_vector_free(g_innerNodeValue);
     gsl_vector_free(g_loadVector);
-    for (int i = 0; i < g_sliceNum; i++)
+    int i = 0, j = 0;
+    for (i = 0; i < g_sliceNum; i++)
     {
-        for (int j = 0; j < g_sliceNum; j++)
+        for (j = 0; j < g_sliceNum; j++)
             free(g_inteValueOnElement[i][j]);
         free(g_inteValueOnElement[i]);
     }

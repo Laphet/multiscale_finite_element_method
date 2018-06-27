@@ -9,10 +9,10 @@
 
 typedef struct coefficient
 {
-    func a_1, a_2, a_3;
-} coefficient;
+    func a1, a2, a3;
+}coefficient;
 
-double zero(double x, double y) { return 0.0; }
+double zero(double x, double y);
 
 void sfemInit(int sliceNum);
 
