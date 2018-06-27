@@ -5,7 +5,7 @@ const double EPSABS = 0.0;
 const double EPSREL = 1e-7;
 
 func g_func = NULL;
-gsl_integration_glfix_table *g_workspace = NULL;
+gsl_integration_glfixed_table *g_workspace = NULL;
 rectangle g_rectangle = {.xmin = 0.0, .xmax = 1.0, .ymin = 0.0, .ymax = 1.0};
 
 double
