@@ -2,6 +2,8 @@
 #define NUMINT_H
 
 #include "gsl/gsl_integration.h"
+#include "math.h"
+#include "stdio.h"
 
 typedef struct rectangle
 {
