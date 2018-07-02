@@ -53,7 +53,7 @@ getNumericalIntegration(func f, rectangle rectangleDom)
 {
     g_func = f;
     g_rectangle = rectangleDom;
-    g_workspace = gsl_integration_glfixed_table_alloc(LIMIT);
+    g_workspace = gsl_integration_glfixed_table_alloc(NUM_POINT);
     gsl_function F;
     F.function = &gslOuterIntergrand;
     F.params = NULL;
