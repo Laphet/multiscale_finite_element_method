@@ -6,17 +6,17 @@ double a3(double x, double y) { return 0.0; }
 
 double test1(double x, double y)
 {
-    return cos((x+y+0.1)/1.0e-2); 
+    return cos((x+y+0.1)/0.1); 
 }
 
 double test2(double x, double y)
 {
-    return sin(x*y/2.0e-2);
+    return sin(x*y/0.1);
 }
 
 double test3(double x, double y)
 {
-    return sqrt(x*y/3.2e-2);
+    return sqrt(x*y/0.1);
 }
 
 int main(void)
