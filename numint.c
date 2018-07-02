@@ -39,7 +39,7 @@ gslOuterIntergrand(double x, void *p)
             break;
         else if (iter >= LIMIT)
         {
-            printf("reach iteration LIMIT(100) \n");
+            printf("reach iteration LIMIT(%d) \n", LIMIT);
             break;
         }
         else
@@ -75,7 +75,7 @@ getNumericalIntegration(func f, rectangle rectangleDom)
             break;
         else if (iter >= LIMIT)
         {
-            printf("reach iteration LIMIT(100) \n");
+            printf("reach iteration LIMIT(%d) \n", LIMIT);
             break;
         }
         else
