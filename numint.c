@@ -39,7 +39,7 @@ gslOuterIntergrand(double x, void *p)
             break;
         else if (iter >= LIMIT)
         {
-            printf("reach iteration LIMIT(%d) \n", LIMIT);
+            printf("reach iteration LIMIT(%d) \n at x=%f", LIMIT, x);
             break;
         }
         else
