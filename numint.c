@@ -5,7 +5,7 @@ const int NUM_POINT = 10;
 const double EPSABS = 1e-7;
 
 func g_func = NULL;
-gsl_integration_glfix_table *g_glfix = NULL;
+gsl_integration_glfixed_table *g_glfix = NULL;
 rectangle g_rectangle = {.xmin = 0.0, .xmax = 1.0, .ymin = 0.0, .ymax = 1.0};
 
 double
@@ -32,8 +32,8 @@ gslOuterIntergrand(double x, void *p)
         resultUpdated = 0.0;
         for (i = 0; i < iter; i++)
         {
-            resultUpdated += gsl_integration_glfix_table(&F, intervalStart, intervalStart + deltaY, g_glfix);
-            intervalStart += deltaX;
+            resultUpdated += gsl_integration_glfixed(&F, intervalStart, intervalStart + deltaY, g_glfix);
+            intervalStart += deltaY;
         }
         if (fabs(resultPrev - resultUpdated) < EPSABS && iter < LIMIT)
             break;
@@ -53,7 +53,7 @@ getNumericalIntegration(func f, rectangle rectangleDom)
 {
     g_func = f;
     g_rectangle = rectangleDom;
-    g_workspace = gsl_integration_glfixed_table_alloc(NUM_POINT);
+    g_glfix = gsl_integration_glfixed_table_alloc(NUM_POINT);
     gsl_function F;
     F.function = &gslOuterIntergrand;
     F.params = NULL;
@@ -68,7 +68,7 @@ getNumericalIntegration(func f, rectangle rectangleDom)
         resultUpdated = 0.0;
         for (i = 0; i < iter; i++)
         {
-            resultUpdated += gsl_integration_glfix_table(&F, intervalStart, intervalStart + deltaX, g_glfix);
+            resultUpdated += gsl_integration_glfixed(&F, intervalStart, intervalStart + deltaX, g_glfix);
             intervalStart += deltaX;
         }
         if (fabs(resultPrev - resultUpdated) < EPSABS && iter < LIMIT)
@@ -81,6 +81,6 @@ getNumericalIntegration(func f, rectangle rectangleDom)
         else
             iter++;
     }
-    gsl_integration_glfixed_table_free(g_workspace);
+    gsl_integration_glfixed_table_free(g_glfix);
     return resultUpdated;
 }
