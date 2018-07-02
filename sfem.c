@@ -95,21 +95,7 @@ void setCoefficient(coefficient A)
     for (m = 0; m < g_sliceNum; m++)
         for (n = 0; n < g_sliceNum; n++)
             for (flag = 0; flag < NUM_OF_INTE; flag++)
-            {
-                double temp = getNumericalIntegration(getIntegrand(m, n, flag), refRec);
-                printf("m=%d n=%d flag=%d value=%f \n", m, n, flag, temp);
-                g_inteValueOnElement[m][n][flag] = temp;
-            }
-
-    /* test */
-    for (m = 0; m < g_sliceNum; m++)
-        for (n = 0; n < g_sliceNum; n++)
-        {
-            printf("m=%d n=%d :", m, n);
-            for (flag = 0; flag < NUM_OF_INTE; flag++)
-                printf("%f\t", g_inteValueOnElement[m][n][flag]);
-            printf("\n");
-        }
+                g_inteValueOnElement[m][n][flag] = getNumericalIntegration(getIntegrand(m, n, flag), refRec);
 }
 
 void solveEPDE(func f, func bdry)
