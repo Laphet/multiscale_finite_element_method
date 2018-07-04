@@ -12,6 +12,8 @@ typedef struct coefficient
     func a1, a2, a3;
 }coefficient;
 
+const double ERR_TOL = 1.0e-7;
+
 double zero(double x, double y);
 
 void sfemInit(int sliceNum);
