@@ -15,7 +15,9 @@ int main(void)
     coefficient A = {.a1=a1, .a2=a2, .a3=a3};
     sfemInit(3);
     setCoefficient(A);
-    int result = solveEPDE(f, zero);
+    int result = solvePDE(f, zero);
+    printf("result is \d\n", result);
+    sfemFinal();
     
     return 0; 
 }

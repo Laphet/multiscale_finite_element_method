@@ -336,7 +336,7 @@ void setLinearEquations2Solve()
     }
 }
 
-int solveEPDE(func f, func bdry)
+int solvePDE(func f, func bdry)
 {
     g_f = f;
     g_bdry = bdry;
@@ -350,7 +350,14 @@ int solveEPDE(func f, func bdry)
         g_stiffnessMatrix, g_loadVector, ERR_TOL, g_innerNodeValue, work);
 }
 
-void solveEPDEwithDivF(func f1, func f2, func bdry) {}
+int solvePDEwithDivF(func f1, func f2, func bdry) {
+    return 0;
+}
+
+void test(void)
+{
+    
+}
 
 void sfemFinal(void)
 {

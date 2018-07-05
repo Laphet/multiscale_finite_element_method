@@ -18,9 +18,9 @@ void sfemInit(int sliceNum);
 
 void setCoefficient(coefficient A);
 
-int solveEPDE(func f, func bdry);
+int solvePDE(func f, func bdry);
 
-void solveEPDEwithDivF(func f1, func f2, func bdry);
+void solvePDEwithDivF(func f1, func f2, func bdry);
 
 void sfemFinal(void);
 
