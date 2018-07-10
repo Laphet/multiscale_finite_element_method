@@ -1,23 +1,23 @@
+#include "math.h"
 #include "sfem.h"
 
 double a1(double x, double y) { return 1.0; }
-double a2(double x, double y) { return 2.0; }
+double a2(double x, double y) { return 1.0; }
 double a3(double x, double y) { return 0.0; }
 
-double f(double x, double y) { return 1.0; }
+double f(double x, double y) { return 2.0; }
 
-double test2(double x, double y) { return sin(x * y / 0.01); }
+double bdry(double x, double y) { return -1.0 * x * x; }
 
-double test3(double x, double y) { return sqrt(x * y / 0.1); }
+double u(double x, double y) { return -1.0 * x * x; }
 
-int main(void) 
+int main(void)
 {
-    coefficient A = {.a1=a1, .a2=a2, .a3=a3};
-    sfemInit(3);
+    coefficient A = { .a1 = a1, .a2 = a2, .a3 = a3 };
+    sfemInit(10);
     setCoefficient(A);
-    int result = solvePDE(f, zero);
-    printf("result is \d\n", result);
+    int result = solvePDE(f, bdry);
+    printf("error=%f\n", getError(u));
     sfemFinal();
-    
-    return 0; 
+    return result;
 }
