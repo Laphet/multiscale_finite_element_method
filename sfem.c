@@ -13,20 +13,13 @@ int g_m = 0, g_n = 0, g_flag = 0;
 rectangle refRec = { .xmin = -1.0, .xmax = 1.0, .ymin = -1.0, .ymax = 1.0 };
 const int NUM_OF_INTE = 10, NUM_OF_LOAD = 4;
 const double ERR_TOL = 1.0e-7;
+const int MAX_ITER = 1000;
 
 double zero(double x, double y) { return 0.0; }
 
 int getIndexInVector(const int m, const int n)
 {
     return n * (g_sliceNum + 1) + m;
-}
-
-int* getIndexInMatrix(const int index)
-{
-    int* entry = (int*)malloc(sizeof(int) * 2);
-    entry[0] = index % (g_sliceNum + 1);
-    entry[1] = index / (g_sliceNum + 1);
-    return entry;
 }
 
 double integrand(double x, double y)
@@ -68,18 +61,16 @@ double integrand(double x, double y)
         break;
     case 6:
         result = (1.0 - y) * (y + 1.0) * g_A.a1(x_, y_)
-            + (-1.0 * (1.0 + x) * (y + 1.0) + (1.0 - y) * (x + 1.0))
-                * g_A.a3(x_, y_)
+            + (-(1.0 + x) * (y + 1.0) + (1.0 - y) * (x + 1.0)) * g_A.a3(x_, y_)
             - (1.0 + x) * (x + 1.0) * g_A.a2(x_, y_);
         break;
     case 7:
-        result = -1.0 * (y + 1.0) * (1.0 + y) * g_A.a1(x_, y_)
-            + (-1.0 * (x + 1.0) * (1.0 + y) + (y + 1.0) * (1.0 - x))
-                * g_A.a3(x_, y_)
+        result = -(y + 1.0) * (1.0 + y) * g_A.a1(x_, y_)
+            + (-(x + 1.0) * (1.0 + y) + (y + 1.0) * (1.0 - x)) * g_A.a3(x_, y_)
             + (x + 1.0) * (1.0 - x) * g_A.a2(x_, y_);
         break;
     case 8:
-        result = -1.0 * (1.0 + y) * (y - 1.0) * g_A.a1(x_, y_)
+        result = -(1.0 + y) * (y - 1.0) * g_A.a1(x_, y_)
             + ((1.0 - x) * (y - 1.0) - (1.0 + y) * (x - 1.0)) * g_A.a3(x_, y_)
             + (1.0 - x) * (x - 1.0) * g_A.a2(x_, y_);
         break;
@@ -91,15 +82,32 @@ double integrand(double x, double y)
     default:
         result = 0.0;
     }
-    return h * h / 4.0 * result / 16.0;
+    return result / 16.0;
 }
 
-func getIntegrand(int m, int n, int flag)
+double integrandOfLoadWithDivF(double x, double y)
 {
-    g_m = m;
-    g_n = n;
-    g_flag = flag;
-    return integrand;
+    double h = 1.0 / (double)g_sliceNum;
+    double x_ = ((x + 1.0) / 2.0 + (double)g_m) * h;
+    double y_ = ((y + 1.0) / 2.0 + (double)g_n) * h;
+    double result = 0.0;
+    switch (g_flag) {
+    case 0:
+        result = g_f1(x_, y_) * (y - 1.0) + g_f2(x_, y_) * (x - 1.0);
+        break;
+    case 1:
+        result = g_f1(x_, y_) * (1.0 - y) - g_f2(x_, y_) * (1.0 + x);
+        break;
+    case 2:
+        result = g_f1(x_, y_) * (y + 1.0) + g_f2(x_, y_) * (x + 1.0);
+        break;
+    case 3:
+        result = -g_f1(x_, y_) * (1.0 + y) + g_f2(x_, y_) * (1.0 - x);
+        break;
+    default:
+        result = 0.0;
+    }
+    return h / 2.0 * result / 4.0;
 }
 
 double integrandOfLoad(double x, double y)
@@ -127,45 +135,23 @@ double integrandOfLoad(double x, double y)
     return h * h / 4.0 * result / 4.0;
 }
 
-func getIntegrandOfLoad(int m, int n, int flag)
+func getIntegrand(int m, int n, int flag)
 {
     g_m = m;
     g_n = n;
     g_flag = flag;
-    return integrandOfLoad;
+    return integrand;
 }
 
-double integrandOfLoadWithDivF(double x, double y)
-{
-    double h = 1.0 / (double)g_sliceNum;
-    double x_ = ((x + 1.0) / 2.0 + (double)g_m) * h;
-    double y_ = ((y + 1.0) / 2.0 + (double)g_n) * h;
-    double result = 0.0;
-    switch (g_flag) {
-    case 0:
-        result = g_f(x_, y_) * (1.0 - x) * (1.0 - y);
-        break;
-    case 1:
-        result = g_f(x_, y_) * (1.0 + x) * (1.0 - y);
-        break;
-    case 2:
-        result = g_f(x_, y_) * (1.0 + x) * (1.0 + y);
-        break;
-    case 3:
-        result = g_f(x_, y_) * (1.0 - x) * (1.0 + y);
-        break;
-    default:
-        result = 0.0;
-    }
-    return h * h / 4.0 * result / 4.0;
-}
-
-func getIntegrandOfLoadWithDivF(int m, int n, int flag)
+func getIntegrandOfLoad(int m, int n, int flag, int isWithDivF)
 {
     g_m = m;
     g_n = n;
     g_flag = flag;
-    return integrandOfLoadWithDivF;
+    if (isWithDivF)
+        return integrandOfLoadWithDivF;
+    else
+        return integrandOfLoad;
 }
 
 void setLoadVector(int isWithDivF)
@@ -175,12 +161,8 @@ void setLoadVector(int isWithDivF)
     for (m = 0; m < g_sliceNum; m++)
         for (n = 0; n < g_sliceNum; n++)
             for (flag = 0; flag < NUM_OF_LOAD; flag++)
-                if (isWithDivF)
-                    g_loadValueOnElement[m][n][flag] = getNumericalIntegration(
-                        getIntegrandOfLoadWithDivF(m, n, flag), refRec);
-                else
-                    g_loadValueOnElement[m][n][flag] = getNumericalIntegration(
-                        getIntegrandOfLoad(m, n, flag), refRec);
+                g_loadValueOnElement[m][n][flag] = getNumericalIntegration(
+                    getIntegrandOfLoad(m, n, flag, isWithDivF), refRec);
 
     for (i = 0; i < (g_sliceNum - 1) * (g_sliceNum - 1); i++) {
         m = i % (g_sliceNum - 1) + 1;
@@ -230,7 +212,7 @@ void sfemInit(int sliceNum)
     g_stiffnessMatrix = gsl_spmatrix_alloc((g_sliceNum - 1) * (g_sliceNum - 1),
         (g_sliceNum - 1) * (g_sliceNum - 1));
     g_stiffnessMatrixExt
-        = gsl_spmatrix_alloc((g_sliceNum + 1) * (g_sliceNum + 1),
+        = gsl_spmatrix_alloc((g_sliceNum - 1) * (g_sliceNum - 1),
             (g_sliceNum + 1) * (g_sliceNum + 1));
     g_innerNodeValue = gsl_vector_calloc((g_sliceNum - 1) * (g_sliceNum - 1));
     g_loadVector = gsl_vector_calloc((g_sliceNum - 1) * (g_sliceNum - 1));
@@ -249,51 +231,45 @@ void setCoefficient(coefficient A)
 
 void setStiffnessMatrixExt(void)
 {
-    int i = 0, m = 0, n = 0, isInteriorPoint = 0;
-    int* entry = NULL;
+    int i = 0, m = 0, n = 0;
     double temp = 0.0;
-    for (i = 0; i < (g_sliceNum + 1) * (g_sliceNum + 1); i++) {
-        entry = getIndexInMatrix(i);
-        m = entry[0];
-        n = entry[1];
-        isInteriorPoint
-            = (m > 0) && (m < g_sliceNum) && (n > 0) && (n < g_sliceNum);
-        if (isInteriorPoint) {
-            temp = g_inteValueOnElement[m][n][1]
-                + g_inteValueOnElement[m - 1][n][2]
-                + g_inteValueOnElement[m - 1][n - 1][3]
-                + g_inteValueOnElement[m][n - 1][4];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m, n), temp);
-            temp = g_inteValueOnElement[m][n - 1][7]
-                + g_inteValueOnElement[m][n][5];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n), temp);
-            temp = g_inteValueOnElement[m][n][8]
-                + g_inteValueOnElement[m - 1][n][6];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m, n + 1), temp);
-            temp = g_inteValueOnElement[m - 1][n][5]
-                + g_inteValueOnElement[m - 1][n - 1][7];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n), temp);
-            temp = g_inteValueOnElement[m - 1][n - 1][6]
-                + g_inteValueOnElement[m][n - 1][8];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m, n - 1), temp);
-            temp = g_inteValueOnElement[m][n][0];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n + 1), temp);
-            temp = g_inteValueOnElement[m - 1][n][9];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n + 1), temp);
-            temp = g_inteValueOnElement[m - 1][n - 1][0];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n - 1), temp);
-            temp = g_inteValueOnElement[m][n - 1][9];
-            gsl_spmatrix_set(
-                g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n - 1), temp);
-        }
+    for (i = 0; i < (g_sliceNum - 1) * (g_sliceNum - 1); i++) {
+        m = i % (g_sliceNum - 1) + 1;
+        n = i / (g_sliceNum - 1) + 1;
+        temp = g_inteValueOnElement[m][n][1]
+            + g_inteValueOnElement[m - 1][n][2]
+            + g_inteValueOnElement[m - 1][n - 1][3]
+            + g_inteValueOnElement[m][n - 1][4];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m, n), temp);
+        temp = g_inteValueOnElement[m][n - 1][7]
+            + g_inteValueOnElement[m][n][5];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n), temp);
+        temp = g_inteValueOnElement[m][n][8]
+            + g_inteValueOnElement[m - 1][n][6];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m, n + 1), temp);
+        temp = g_inteValueOnElement[m - 1][n][5]
+            + g_inteValueOnElement[m - 1][n - 1][7];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n), temp);
+        temp = g_inteValueOnElement[m - 1][n - 1][6]
+            + g_inteValueOnElement[m][n - 1][8];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m, n - 1), temp);
+        temp = g_inteValueOnElement[m][n][0];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n + 1), temp);
+        temp = g_inteValueOnElement[m - 1][n][9];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n + 1), temp);
+        temp = g_inteValueOnElement[m - 1][n - 1][0];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m - 1, n - 1), temp);
+        temp = g_inteValueOnElement[m][n - 1][9];
+        gsl_spmatrix_set(
+            g_stiffnessMatrixExt, i, getIndexInVector(m + 1, n - 1), temp);
     }
 }
 
@@ -311,47 +287,40 @@ void setLinearEquations2Solve()
         if (isContactWithBdry) {
             for (b = 1; b < g_sliceNum; b++) {
                 temp += (g_bdry(0.0, (double)b * h)
-                        * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                              getIndexInVector(m, n), getIndexInVector(0, b))
+                        * gsl_spmatrix_get(
+                              g_stiffnessMatrixExt, i, getIndexInVector(0, b))
                     + g_bdry(1.0, (double)b * h)
-                        * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                              getIndexInVector(m, n),
+                        * gsl_spmatrix_get(g_stiffnessMatrixExt, i,
                               getIndexInVector(g_sliceNum, b))
                     + g_bdry((double)b * h, 0.0)
-                        * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                              getIndexInVector(m, n), getIndexInVector(b, 0))
+                        * gsl_spmatrix_get(
+                              g_stiffnessMatrixExt, i, getIndexInVector(b, 0))
                     + g_bdry((double)b * h, 1.0)
-                        * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                              getIndexInVector(m, n),
+                        * gsl_spmatrix_get(g_stiffnessMatrixExt, i,
                               getIndexInVector(b, g_sliceNum)));
             }
             temp += (g_bdry(0.0, 0.0)
-                    * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                          getIndexInVector(m, n), getIndexInVector(0, 0))
+                    * gsl_spmatrix_get(
+                          g_stiffnessMatrixExt, i, getIndexInVector(0, 0))
                 + g_bdry(1.0, 0.0)
-                    * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                          getIndexInVector(m, n),
+                    * gsl_spmatrix_get(g_stiffnessMatrixExt, i,
                           getIndexInVector(g_sliceNum, 0))
                 + g_bdry(1.0, 1.0)
-                    * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                          getIndexInVector(m, n),
+                    * gsl_spmatrix_get(g_stiffnessMatrixExt, i,
                           getIndexInVector(g_sliceNum, g_sliceNum))
                 + g_bdry(0.0, 1.0)
-                    * gsl_spmatrix_get(g_stiffnessMatrixExt,
-                          getIndexInVector(m, n),
+                    * gsl_spmatrix_get(g_stiffnessMatrixExt, i,
                           getIndexInVector(0, g_sliceNum)));
-            temp = gsl_vector_get(g_loadVector, i)-temp;
+            temp = gsl_vector_get(g_loadVector, i) - temp;
             gsl_vector_set(g_loadVector, i, temp);
         }
         for (j = 0; j < i + 1; j++) {
             m_ = j % (g_sliceNum - 1) + 1;
             n_ = j / (g_sliceNum - 1) + 1;
-            gsl_spmatrix_set(g_stiffnessMatrix, i, j,
-                gsl_spmatrix_get(g_stiffnessMatrixExt, getIndexInVector(m, n),
-                    getIndexInVector(m_, n_)));
-            gsl_spmatrix_set(g_stiffnessMatrix, j, i,
-                gsl_spmatrix_get(g_stiffnessMatrixExt,
-                    getIndexInVector(m_, n_), getIndexInVector(m, n)));
+            temp = gsl_spmatrix_get(
+                g_stiffnessMatrixExt, i, getIndexInVector(m_, n_));
+            gsl_spmatrix_set(g_stiffnessMatrix, i, j, temp);
+            gsl_spmatrix_set(g_stiffnessMatrix, j, i, temp);
         }
     }
 }
@@ -366,16 +335,36 @@ int solvePDE(func f, func bdry)
     const gsl_splinalg_itersolve_type* T = gsl_splinalg_itersolve_gmres;
     gsl_splinalg_itersolve* work = gsl_splinalg_itersolve_alloc(
         T, (g_sliceNum - 1) * (g_sliceNum - 1), 0);
-    int status = 0;
+    int status = 0, iter = 0;
     do {
         status = gsl_splinalg_itersolve_iterate(
             g_stiffnessMatrix, g_loadVector, ERR_TOL, g_innerNodeValue, work);
-    } while (status == GSL_CONTINUE);
+        iter++;
+    } while (status == GSL_CONTINUE && iter < MAX_ITER);
     gsl_splinalg_itersolve_free(work);
     return 1;
 }
 
-int solvePDEwithDivF(func f1, func f2, func bdry) { return 0; }
+int solvePDEwithDivF(func f1, func f2, func bdry)
+{
+    g_f1 = f1;
+    g_f2 = f2;
+    g_bdry = bdry;
+    setStiffnessMatrixExt();
+    setLoadVector(1);
+    setLinearEquations2Solve();
+    const gsl_splinalg_itersolve_type* T = gsl_splinalg_itersolve_gmres;
+    gsl_splinalg_itersolve* work = gsl_splinalg_itersolve_alloc(
+        T, (g_sliceNum - 1) * (g_sliceNum - 1), 0);
+    int status = 0, iter = 0;
+    do {
+        status = gsl_splinalg_itersolve_iterate(
+            g_stiffnessMatrix, g_loadVector, ERR_TOL, g_innerNodeValue, work);
+        iter++;
+    } while (status == GSL_CONTINUE && iter < MAX_ITER);
+    gsl_splinalg_itersolve_free(work);
+    return 1;
+}
 
 double getError(func u)
 {
