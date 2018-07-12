@@ -107,7 +107,7 @@ double integrandOfLoadWithDivF(double x, double y)
     default:
         result = 0.0;
     }
-    return h / 2.0 * result / 4.0;
+    return result / 8.0;
 }
 
 double integrandOfLoad(double x, double y)
@@ -132,7 +132,7 @@ double integrandOfLoad(double x, double y)
     default:
         result = 0.0;
     }
-    return h * h / 4.0 * result / 4.0;
+    return result / 16.0;
 }
 
 func getIntegrand(int m, int n, int flag)
@@ -157,12 +157,20 @@ func getIntegrandOfLoad(int m, int n, int flag, int isWithDivF)
 void setLoadVector(int isWithDivF)
 {
     int m = 0, n = 0, flag = 0, i = 0;
-    double temp = 0.0;
+    double temp = 0.0, h = 1.0 / (double)g_sliceNum;
     for (m = 0; m < g_sliceNum; m++)
         for (n = 0; n < g_sliceNum; n++)
             for (flag = 0; flag < NUM_OF_LOAD; flag++)
-                g_loadValueOnElement[m][n][flag] = getNumericalIntegration(
-                    getIntegrandOfLoad(m, n, flag, isWithDivF), refRec);
+                if (isWithDivF)
+                    g_loadValueOnElement[m][n][flag] = h
+                        * getNumericalIntegration(
+                              getIntegrandOfLoad(m, n, flag, isWithDivF),
+                              refRec);
+                else
+                    g_loadValueOnElement[m][n][flag] = h * h
+                        * getNumericalIntegration(
+                              getIntegrandOfLoad(m, n, flag, isWithDivF),
+                              refRec);
 
     for (i = 0; i < (g_sliceNum - 1) * (g_sliceNum - 1); i++) {
         m = i % (g_sliceNum - 1) + 1;
@@ -364,6 +372,35 @@ int solvePDEwithDivF(func f1, func f2, func bdry)
     } while (status == GSL_CONTINUE && iter < MAX_ITER);
     gsl_splinalg_itersolve_free(work);
     return 1;
+}
+
+gsl_vector* getInnerNodeValue()
+{
+    gsl_vector* innerNodeValue
+        = gsl_vector_calloc((g_sliceNum - 1) * (g_sliceNum - 1));
+    gsl_vector_memcpy(innerNodeValue, g_innerNodeValue);
+    return innerNodeValue;
+}
+
+gsl_vector* getNodeValue()
+{
+    gsl_vector* nodeValue
+        = gsl_vector_calloc((g_sliceNum + 1) * (g_sliceNum + 1));
+    int isBdryNode = 0, i = 0, m = 0, n = 0;
+    double temp = 0.0, h = 0.0;
+    for (i = 0; i < (g_sliceNum + 1) * (g_sliceNum + 1); i++) {
+        m = i % (g_sliceNum + 1);
+        n = i / (g_sliceNum + 1);
+        isBdryNode = m == 0 || m == g_sliceNum || n == 0 || n == g_sliceNum;
+        if (isBdryNode)
+            gsl_vector_set(nodeValue, i, g_bdry((double)m * h, (double)n * h));
+        else {
+            temp = gsl_vector_get(
+                g_innerNodeValue, (n - 1) * (g_sliceNum - 1) + m - 1);
+            gsl_vector_set(nodeValue, i, temp);
+        }
+    }
+    return nodeValue;
 }
 
 double getError(func u)
