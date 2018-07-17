@@ -12,15 +12,11 @@ typedef struct coefficient {
     func a1, a2, a3;
 } coefficient;
 
-double zero(double x, double y);
-
 void sfemInit(int sliceNum);
 
-void setCoefficient(coefficient A);
+int solvePDE(coefficient A, func f, func bdry);
 
-int solvePDE(func f, func bdry);
-
-int solvePDEwithDivF(func f1, func f2, func bdry);
+int solvePDEwithDivF(coefficient A, func f1, func f2, func bdry);
 
 void sfemTest(void);
 

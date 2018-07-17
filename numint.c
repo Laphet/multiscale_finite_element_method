@@ -1,13 +1,12 @@
 #include "numint.h"
 
+static func g_func;
+static gsl_integration_glfixed_table* g_glfix;
+static rectangle g_rectangle;
 const int LIMIT = 10;
 const int NUM_POINT = 10;
-const double EPSABS = 1e-7;
-
-func g_func = NULL;
-gsl_integration_glfixed_table* g_glfix = NULL;
-rectangle g_rectangle = { .xmin = 0.0, .xmax = 1.0, .ymin = 0.0, .ymax = 1.0 };
-
+const double EPSABS = 1.0e-7;
+const rectangle refRec = { .xmin = -1.0, .xmax = 1.0, .ymin = -1.0, .ymax = 1.0 };
 double gslInnerIntegrand(double y, void* p)
 {
     double x = *(double*)p;
